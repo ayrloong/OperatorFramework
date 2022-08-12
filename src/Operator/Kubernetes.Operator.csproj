@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Controller\Kubernetes.Controller.csproj" />
+  </ItemGroup>
+
 </Project>

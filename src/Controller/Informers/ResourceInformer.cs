@@ -22,7 +22,7 @@ namespace Kubernetes.Controller.Informers;
 public class ResourceInformer<TResource> : BackgroundHostedService, IResourceInformer<TResource>
     where TResource : class, IKubernetesObject<V1ObjectMeta>, new()
 {
-    private readonly object _sync = new object();
+    private readonly object _sync = new();
     private readonly IAnyResourceKind _client;
     private readonly GroupApiVersionKind _names;
     private readonly SemaphoreSlim _ready = new SemaphoreSlim(0);
@@ -260,7 +260,7 @@ public class ResourceInformer<TResource> : BackgroundHostedService, IResourceInf
         var watcherCompletionSource = new TaskCompletionSource<int>();
 
         // begin watching where list left off
-        var watchWithHttpMessage = await _client.ListClusterAnyResourceKindWithHttpMessagesAsync<TResource>(
+        var watchWithHttpMessage =  _client.ListClusterAnyResourceKindWithHttpMessagesAsync<TResource>(
             _names.Group,
             _names.ApiVersion,
             _names.PluralName,
@@ -300,27 +300,25 @@ public class ResourceInformer<TResource> : BackgroundHostedService, IResourceInf
             () => { watcherCompletionSource.TrySetResult(0); });
 
         // reconnect if no events have arrived after a certain time
-        using var checkLastEventUtcTimer = new Timer(
+        await using var checkLastEventUtcTimer = new Timer(
             _ =>
             {
                 var lastEvent = DateTime.UtcNow - lastEventUtc;
-                if (lastEvent > TimeSpan.FromMinutes(9.5))
-                {
-                    lastEventUtc = DateTime.MaxValue;
-                    Logger.LogDebug(
-                        EventId(EventType.DisposingToReconnect),
-                        "Disposing watcher for {ResourceType} to cause reconnect.",
-                        typeof(TResource).Name);
+                if (lastEvent <= TimeSpan.FromMinutes(9.5)) return;
+                lastEventUtc = DateTime.MaxValue;
+                Logger.LogDebug(
+                    EventId(EventType.DisposingToReconnect),
+                    "Disposing watcher for {ResourceType} to cause reconnect.",
+                    typeof(TResource).Name);
 
-                    watcherCompletionSource.TrySetCanceled();
-                    watcher.Dispose();
-                }
+                watcherCompletionSource.TrySetCanceled();
+                watcher.Dispose();
             },
             state: null,
             dueTime: TimeSpan.FromSeconds(45),
             period: TimeSpan.FromSeconds(45));
 
-        using var registration = cancellationToken.Register(watcher.Dispose);
+        await using var registration = cancellationToken.Register(watcher.Dispose);
         try
         {
             await watcherCompletionSource.Task;
@@ -429,15 +427,13 @@ public class ResourceInformer<TResource> : BackgroundHostedService, IResourceInf
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!_disposedValue)
+            if (_disposedValue) return;
+            lock (ResourceInformer._sync)
             {
-                lock (ResourceInformer._sync)
-                {
-                    ResourceInformer._registrations = ResourceInformer._registrations.Remove(this);
-                }
-
-                _disposedValue = true;
+                ResourceInformer._registrations = ResourceInformer._registrations.Remove(this);
             }
+
+            _disposedValue = true;
         }
 
         public void Dispose()

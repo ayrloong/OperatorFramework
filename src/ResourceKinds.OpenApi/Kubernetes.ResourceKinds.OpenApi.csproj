@@ -6,4 +6,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Kubernetes.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NJsonSchema" Version="10.7.2" />
+    <PackageReference Include="NSwag.Core" Version="13.16.1" />
+  </ItemGroup>
+
 </Project>
