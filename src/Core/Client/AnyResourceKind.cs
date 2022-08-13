@@ -20,27 +20,10 @@ public class AnyResourceKind : IServiceOperations<k8s.Kubernetes>, IAnyResourceK
     {
         if (string.IsNullOrEmpty(group))
         {
-            if (string.IsNullOrEmpty(ns))
-            {
-                return "api/{version}/{plural}";
-            }
-            else
-            {
-                return "api/{version}/namespaces/{namespace}/{plural}";
-            }
+            return string.IsNullOrEmpty(ns) ? "api/{version}/{plural}" : "api/{version}/namespaces/{namespace}/{plural}";
         }
-        else
-        {
-            if (string.IsNullOrEmpty(ns))
-            {
-                return "apis/{group}/{version}/{plural}";
-            }
-            else
-            {
-                return "apis/{group}/{version}/namespaces/{namespace}/{plural}";
-            }
 
-        }
+        return string.IsNullOrEmpty(ns) ? "apis/{group}/{version}/{plural}" : "apis/{group}/{version}/namespaces/{namespace}/{plural}";
     }
 
     /// <inheritdoc/>

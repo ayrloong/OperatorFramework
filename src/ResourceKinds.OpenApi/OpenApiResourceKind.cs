@@ -5,10 +5,9 @@ namespace Kubernetes.ResourceKinds.OpenApi;
 
 public class OpenApiResourceKind : IResourceKind
 {
-    private readonly Dictionary<JsonSchema, IResourceKindElement> _elements =
-        new Dictionary<JsonSchema, IResourceKindElement>();
+    private readonly Dictionary<JsonSchema, IResourceKindElement> _elements = new();
 
-    private readonly object _elementsSync = new object();
+    private readonly object _elementsSync = new();
 
     public OpenApiResourceKind(string apiVersion, string kind, JsonSchema jsonSchema)
     {

@@ -25,7 +25,7 @@ public class ResourceInformer<TResource> : BackgroundHostedService, IResourceInf
     private readonly object _sync = new();
     private readonly IAnyResourceKind _client;
     private readonly GroupApiVersionKind _names;
-    private readonly SemaphoreSlim _ready = new SemaphoreSlim(0);
+    private readonly SemaphoreSlim _ready = new(0);
     private ImmutableList<Registration> _registrations = ImmutableList<Registration>.Empty;
 
     private IDictionary<NamespacedName, IList<V1OwnerReference>> _cache =
