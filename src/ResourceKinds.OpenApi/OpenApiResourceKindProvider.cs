@@ -87,23 +87,22 @@ public class OpenApiResourceKindProvider : IResourceKindProvider
 
         foreach (var (_, definition) in definitions)
         {
-            if (definition.ExtensionData?.TryGetValue("x-kubernetes-group-version-kind", out var _) ?? false)
+            if (!(definition.ExtensionData?.TryGetValue("x-kubernetes-group-version-kind", out var _) ??
+                  false)) continue;
+            var groupVersionKindElements = (object[])definition.ExtensionData["x-kubernetes-group-version-kind"];
+            var groupVersionKind = (Dictionary<string, object>)groupVersionKindElements[0];
+
+            var group = (string)groupVersionKind["group"];
+            var version = (string)groupVersionKind["version"];
+            var kind = (string)groupVersionKind["kind"];
+
+            if (string.IsNullOrEmpty(@group))
             {
-                var groupVersionKindElements = (object[])definition.ExtensionData["x-kubernetes-group-version-kind"];
-                var groupVersionKind = (Dictionary<string, object>)groupVersionKindElements[0];
-
-                var group = (string)groupVersionKind["group"];
-                var version = (string)groupVersionKind["version"];
-                var kind = (string)groupVersionKind["kind"];
-
-                if (string.IsNullOrEmpty(group))
-                {
-                    schemas[(version, kind)] = definition;
-                }
-                else
-                {
-                    schemas[($"{group}/{version}", kind)] = definition;
-                }
+                schemas[(version, kind)] = definition;
+            }
+            else
+            {
+                schemas[($"{@group}/{version}", kind)] = definition;
             }
         }
 

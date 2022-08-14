@@ -24,12 +24,12 @@ public class TestClusterStartup
     {
         if (app is null)
         {
-            throw new System.ArgumentNullException(nameof(app));
+            throw new ArgumentNullException(nameof(app));
         }
 
         if (cluster is null)
         {
-            throw new System.ArgumentNullException(nameof(cluster));
+            throw new ArgumentNullException(nameof(cluster));
         }
 
         app.Use(next => async context =>
